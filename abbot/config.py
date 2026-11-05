@@ -1,5 +1,7 @@
 
 import os
+from pathlib import Path
+
 from dotenv import load_dotenv
 from cryptography.fernet import Fernet
 
@@ -17,17 +19,13 @@ def required_env(name: str) -> str:
     return value.strip()
 
 
-# Telegram controller bot
 BOT_TOKEN = required_env("BOT_TOKEN")
 
-# Telegram API credentials
 API_ID = int(required_env("API_ID"))
 API_HASH = required_env("API_HASH")
 
-# Only this Telegram user can control ABBot
 ADMIN_ID = int(required_env("ADMIN_ID"))
 
-# Session encryption key
 ENCRYPTION_KEY = required_env("ENCRYPTION_KEY").encode()
 
 try:
@@ -38,7 +36,6 @@ except (ValueError, TypeError) as exc:
     ) from exc
 
 
-# Broadcasting configuration
 BOT_REPLY_TIMEOUT = int(
     os.getenv("BOT_REPLY_TIMEOUT", "25")
 )
@@ -47,12 +44,14 @@ POST_COMMAND_DELAY = float(
     os.getenv("POST_COMMAND_DELAY", "2")
 )
 
-# Database
-DB_PATH = os.getenv("DB_PATH", "abbot.db")
+# Database path
+DB_PATH = os.getenv("DB_PATH", "/tmp/abbot.db")
 
-# Destination bot limit
+db_file = Path(DB_PATH).expanduser().resolve()
+db_file.parent.mkdir(parents=True, exist_ok=True)
+DB_PATH = str(db_file)
+
 MAX_BOTS = 30
-
 
 if BOT_REPLY_TIMEOUT <= 0:
     raise RuntimeError("BOT_REPLY_TIMEOUT must be greater than zero.")
