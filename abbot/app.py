@@ -73,10 +73,14 @@ async def health_check(reader, writer):
 # ==========================================
 
 def is_admin(message):
-    return bool(
-        message.from_user
-        and message.from_user.id == ADMIN_ID
-    )
+    if not message.from_user:
+        return False
+
+    try:
+        return message.from_user.id == int(ADMIN_ID)
+    except (TypeError, ValueError):
+        print("ERROR: ADMIN_ID is not a valid numeric Telegram ID.", flush=True)
+        return False
 
 
 def admin_only(func):
