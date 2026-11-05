@@ -606,6 +606,42 @@ async def handle_input(_, message):
 
 
 async def main():
+    global controller_bot_id
+
+    print("STEP 1: Initializing database...")
+    await init_db()
+
+    print("STEP 2: Starting controller bot...")
+    await bot.start()
+
+    me = await bot.get_me()
+    controller_bot_id = me.id
+
+    print(f"BOT CONNECTED: @{me.username}")
+    print(f"BOT ID: {me.id}")
+    print(f"ADMIN ID: {ADMIN_ID}")
+
+    try:
+        await bot.send_message(
+            ADMIN_ID,
+            "✅ ABBot startup test successful!"
+        )
+        print("STEP 3: Startup message sent to admin.")
+    except Exception as e:
+        print(f"STARTUP MESSAGE ERROR: {type(e).__name__}: {e}")
+
+    print("STEP 4: Starting saved user session...")
+    user = await start_saved_user()
+
+    if user:
+        register_user_handler(user)
+        print("USER SESSION CONNECTED.")
+    else:
+        print("NO SAVED USER SESSION.")
+
+    print("ABBot is running and waiting for updates.")
+
+    await asyncio.Event().wait()
 
     global controller_bot_id
 
