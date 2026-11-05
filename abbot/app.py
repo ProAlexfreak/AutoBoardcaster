@@ -55,20 +55,16 @@ def is_admin(message):
 
 
 def admin_only(func):
-
     @wraps(func)
     async def wrapper(client, message):
-
         if not is_admin(message):
             return
-
         return await func(client, message)
 
     return wrapper
 
 
 async def reply(message, text):
-
     await message.reply_text(
         text,
         disable_web_page_preview=True
@@ -76,16 +72,13 @@ async def reply(message, text):
 
 
 async def status_sender(text):
-
     try:
         await bot.send_message(ADMIN_ID, text)
-
     except Exception:
         pass
 
 
 def register_user_handler(client):
-
     global capture_client
 
     if capture_client is client:
@@ -99,19 +92,30 @@ def register_user_handler(client):
 
     capture_client = client
 
+
 @bot.on_message(filters.private, group=-1)
 async def debug_updates(_, message):
-    sender_id = message.from_user.id if message.from_user else None
-    command = (message.text or "").split()[0] if message.text else "No text"
+    sender_id = (
+        message.from_user.id
+        if message.from_user else None
+    )
+
+    command = (
+        (message.text or "").split()[0]
+        if message.text else "No text"
+    )
 
     print(
         f"PRIVATE UPDATE RECEIVED | "
         f"Sender: {sender_id} | Command: {command}"
     )
-@bot.on_message(filters.private & filters.command("start"))
+
+
+@bot.on_message(
+    filters.private & filters.command("start")
+)
 @admin_only
 async def start(_, message):
-
     me = user_session.user_client
     bots = await list_destinations()
 
@@ -127,17 +131,16 @@ async def start(_, message):
     )
 
 
-@bot.on_message(filters.private & filters.command("login"))
+@bot.on_message(
+    filters.private & filters.command("login")
+)
 @admin_only
 async def login(_, message):
-
     old = pending.pop(ADMIN_ID, None)
 
     if old and old.get("client"):
-
         try:
             await old["client"].disconnect()
-
         except Exception:
             pass
 
@@ -150,10 +153,11 @@ async def login(_, message):
     )
 
 
-@bot.on_message(filters.private & filters.command("string"))
+@bot.on_message(
+    filters.private & filters.command("string")
+)
 @admin_only
 async def string_login(_, message):
-
     pending[ADMIN_ID] = {"step": "session_string"}
 
     await reply(
@@ -169,7 +173,6 @@ async def string_login(_, message):
 )
 @admin_only
 async def login_details(_, message):
-
     client = user_session.user_client
 
     if not client:
@@ -191,10 +194,11 @@ async def login_details(_, message):
     )
 
 
-@bot.on_message(filters.private & filters.command("logout"))
+@bot.on_message(
+    filters.private & filters.command("logout")
+)
 @admin_only
 async def logout(_, message):
-
     global capture_client
 
     await logout_user()
@@ -208,10 +212,11 @@ async def logout(_, message):
     )
 
 
-@bot.on_message(filters.private & filters.command("addbots"))
+@bot.on_message(
+    filters.private & filters.command("addbots")
+)
 @admin_only
 async def addbots(_, message):
-
     pending[ADMIN_ID] = {"step": "add_bot"}
 
     await reply(
@@ -221,10 +226,11 @@ async def addbots(_, message):
     )
 
 
-@bot.on_message(filters.private & filters.command("removebots"))
+@bot.on_message(
+    filters.private & filters.command("removebots")
+)
 @admin_only
 async def removebots(_, message):
-
     pending[ADMIN_ID] = {"step": "remove_bot"}
 
     await reply(
@@ -233,10 +239,11 @@ async def removebots(_, message):
     )
 
 
-@bot.on_message(filters.private & filters.command("listbots"))
+@bot.on_message(
+    filters.private & filters.command("listbots")
+)
 @admin_only
 async def listbots(_, message):
-
     rows = await list_destinations()
 
     if not rows:
@@ -258,10 +265,11 @@ async def listbots(_, message):
     await reply(message, "\n".join(lines))
 
 
-@bot.on_message(filters.private & filters.command("sendall"))
+@bot.on_message(
+    filters.private & filters.command("sendall")
+)
 @admin_only
 async def sendall(_, message):
-
     client = user_session.user_client
     source = last_post.get(ADMIN_ID)
 
@@ -296,12 +304,8 @@ async def sendall(_, message):
     )
 
     try:
-
-        # Enable detection of the incoming post on the user account.
         broadcaster.on_source = True
 
-        # ABBot sends the copied post to the admin's private chat.
-        # The logged-in user account receives it from ABBot.
         await bot.copy_message(
             chat_id=ADMIN_ID,
             from_chat_id=ADMIN_ID,
@@ -314,7 +318,6 @@ async def sendall(_, message):
         )
 
     except Exception as exc:
-
         broadcaster.on_source = None
 
         await status.edit_text(
@@ -323,12 +326,12 @@ async def sendall(_, message):
         )
 
 
-@bot.on_message(filters.private & filters.command("cancel"))
+@bot.on_message(
+    filters.private & filters.command("cancel")
+)
 @admin_only
 async def cancel(_, message):
-
     if broadcaster.running:
-
         broadcaster.cancel()
 
         return await reply(
@@ -340,10 +343,8 @@ async def cancel(_, message):
     state = pending.pop(ADMIN_ID, None)
 
     if state and state.get("client"):
-
         try:
             await state["client"].disconnect()
-
         except Exception:
             pass
 
@@ -375,15 +376,12 @@ COMMANDS = [
 )
 @admin_only
 async def handle_input(_, message):
-
     state = pending.get(ADMIN_ID)
 
     if state:
-
         step = state["step"]
 
         try:
-
             if not message.text:
                 return await reply(
                     message,
@@ -393,7 +391,6 @@ async def handle_input(_, message):
             text = message.text.strip()
 
             if step == "phone":
-
                 client, code_hash = await begin_phone_login(text)
 
                 pending[ADMIN_ID] = {
@@ -410,11 +407,9 @@ async def handle_input(_, message):
                 return
 
             if step == "otp":
-
                 client = state["client"]
 
                 try:
-
                     me = await finish_phone_login(
                         client,
                         state["phone"],
@@ -423,9 +418,7 @@ async def handle_input(_, message):
                     )
 
                 except RuntimeError as exc:
-
                     if str(exc) == "2FA_REQUIRED":
-
                         pending[ADMIN_ID] = {
                             **state,
                             "step": "password",
@@ -462,7 +455,6 @@ async def handle_input(_, message):
                 return
 
             if step == "password":
-
                 me = await finish_phone_login(
                     state["client"],
                     state["phone"],
@@ -488,7 +480,6 @@ async def handle_input(_, message):
                 return
 
             if step == "session_string":
-
                 me = await login_with_string(text)
 
                 pending.pop(ADMIN_ID, None)
@@ -508,7 +499,6 @@ async def handle_input(_, message):
                 return
 
             if step == "add_bot":
-
                 client = user_session.user_client
 
                 if not client:
@@ -518,7 +508,6 @@ async def handle_input(_, message):
                     )
 
                 username = text.lstrip("@")
-
                 chat = await client.get_users(username)
 
                 if not chat.is_bot:
@@ -527,7 +516,6 @@ async def handle_input(_, message):
                         "That username is not a bot."
                     )
 
-                # No internal admin-list validation.
                 await client.get_chat(chat.id)
 
                 result = await add_destination(
@@ -537,7 +525,6 @@ async def handle_input(_, message):
                 )
 
                 if result == "added":
-
                     pending.pop(ADMIN_ID, None)
 
                     total = len(await list_destinations())
@@ -549,14 +536,12 @@ async def handle_input(_, message):
                     )
 
                 elif result == "limit":
-
                     await reply(
                         message,
                         f"Maximum limit reached ({MAX_BOTS} bots)."
                     )
 
                 else:
-
                     await reply(
                         message,
                         "That bot is already in the list."
@@ -565,7 +550,6 @@ async def handle_input(_, message):
                 return
 
             if step == "remove_bot":
-
                 removed = await remove_destination(text)
 
                 pending.pop(ADMIN_ID, None)
@@ -578,7 +562,6 @@ async def handle_input(_, message):
                 return
 
         except RPCError as exc:
-
             await reply(
                 message,
                 f"Telegram rejected the operation: "
@@ -587,16 +570,13 @@ async def handle_input(_, message):
             return
 
         except Exception as exc:
-
             await reply(
                 message,
                 f"Error: {type(exc).__name__}: {exc}"
             )
             return
 
-    # Save the most recently supplied post.
     if message.media or message.text:
-
         last_post[ADMIN_ID] = message
 
         await reply(
@@ -627,10 +607,15 @@ async def main():
             "✅ ABBot startup test successful!"
         )
         print("STEP 3: Startup message sent to admin.")
+
     except Exception as e:
-        print(f"STARTUP MESSAGE ERROR: {type(e).__name__}: {e}")
+        print(
+            f"STARTUP MESSAGE ERROR: "
+            f"{type(e).__name__}: {e}"
+        )
 
     print("STEP 4: Starting saved user session...")
+
     user = await start_saved_user()
 
     if user:
@@ -640,22 +625,5 @@ async def main():
         print("NO SAVED USER SESSION.")
 
     print("ABBot is running and waiting for updates.")
-
-    await asyncio.Event().wait()
-
-    global controller_bot_id
-
-    await init_db()
-
-    await bot.start()
-
-    controller_bot_id = (await bot.get_me()).id
-
-    user = await start_saved_user()
-
-    if user:
-        register_user_handler(user)
-
-    print("ABBot is running.")
 
     await asyncio.Event().wait()
