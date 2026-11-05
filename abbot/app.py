@@ -99,7 +99,15 @@ def register_user_handler(client):
 
     capture_client = client
 
+@bot.on_message(filters.private, group=-1)
+async def debug_updates(_, message):
+    sender_id = message.from_user.id if message.from_user else None
+    command = (message.text or "").split()[0] if message.text else "No text"
 
+    print(
+        f"PRIVATE UPDATE RECEIVED | "
+        f"Sender: {sender_id} | Command: {command}"
+    )
 @bot.on_message(filters.private & filters.command("start"))
 @admin_only
 async def start(_, message):
