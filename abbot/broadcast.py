@@ -5,7 +5,7 @@ import time
 from pyrogram import filters
 from pyrogram.errors import FloodWait, RPCError
 
-from .config import BOT_REPLY_TIMEOUT
+from .config import BOT_REPLY_TIMEOUT, ADMIN_ID
 from .db import list_destinations
 
 
