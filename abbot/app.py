@@ -654,23 +654,22 @@ async def main():
 
     print("STEP 2: Starting controller bot...")
     await bot.start()
-me = await bot.get_me()
-
-print("BOT CLIENT STARTED:", bot.is_connected)
-print("BOT IDENTITY:", me.id)
-print("WEBHOOK CHECK: Controller started")
 
     me = await bot.get_me()
     controller_bot_id = me.id
 
     print(f"BOT CONNECTED: @{me.username}")
-print(f"BOT ID: {me.id}")
-print(f"ADMIN ID: {ADMIN_ID}")
+    print(f"BOT ID: {me.id}")
+    print(f"ADMIN ID: {ADMIN_ID}")
+
+    print("BOT CLIENT STARTED:", bot.is_connected)
+    print("BOT IDENTITY:", me.id)
+    print("WEBHOOK CHECK: Controller started")
 
     try:
         await bot.send_message(
             ADMIN_ID,
-            "✅ ABBot startup test successful!"
+            "✅ ABBot startup test successful Enjoy Babee Congratulations Youre Suscess Fully Fakedd Haha Go Cheak Now"
         )
         print("STEP 3: Startup message sent to admin.")
 
