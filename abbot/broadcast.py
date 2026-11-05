@@ -17,14 +17,15 @@ class Broadcaster:
         self.reply_waiters = {}
 
     def capture_reply(self, client, controller_bot_id, status_sender):
+
         @client.on_message(filters.private & filters.incoming)
         async def _capture(_, message):
 
             if not message.chat:
                 return
 
-            # Detect the post delivered by the controller bot.
-            # In a private chat, chat.id is the bot's ID.
+            # Detect the post copied by ABBot into the user account's
+            # private chat with ABBot.
             if (
                 message.chat.id == controller_bot_id
                 and message.from_user
@@ -32,12 +33,13 @@ class Broadcaster:
                 and self.on_source is not None
             ):
                 self.on_source = None
+
                 asyncio.create_task(
                     self.run(client, message, status_sender)
                 )
                 return
 
-            # Capture incoming messages from destination bots.
+            # Capture replies from destination bots.
             chat_id = message.chat.id
             waiter = self.reply_waiters.get(chat_id)
 
@@ -46,11 +48,11 @@ class Broadcaster:
                 and message.from_user
                 and message.from_user.is_bot
                 and message.from_user.id == chat_id
-                and not waiter.done()
             ):
-                await waiter.put(message)
+                waiter.put_nowait(message)
 
     async def _wait_reply(self, queue, forwarded_id, timeout):
+
         deadline = time.monotonic() + timeout
 
         while True:
@@ -66,7 +68,7 @@ class Broadcaster:
                 timeout=remaining
             )
 
-            # Only accept a reply to the exact forwarded message.
+            # Only accept a reply to the exact forwarded post.
             if (
                 message.reply_to_message
                 and message.reply_to_message.id == forwarded_id
@@ -74,13 +76,13 @@ class Broadcaster:
                 return message
 
     async def _retry_floodwait(self, operation):
+
         while True:
             try:
                 return await operation()
 
             except FloodWait as exc:
-                wait_time = exc.value
-                await asyncio.sleep(wait_time)
+                await asyncio.sleep(exc.value)
 
     async def run(self, client, source_message, status_callback):
 
@@ -120,12 +122,10 @@ class Broadcaster:
                 label = f"{first_name} (@{username})"
 
                 # Register the queue BEFORE forwarding.
-                # This prevents fast replies from being missed.
                 queue = asyncio.Queue()
                 self.reply_waiters[bot_id] = queue
 
                 try:
-                    # Forward the original post.
                     forwarded = await self._retry_floodwait(
                         lambda: client.forward_messages(
                             chat_id=bot_id,
@@ -143,7 +143,7 @@ class Broadcaster:
                         )
 
                     # Wait for the destination bot's exact reply.
-                    reply = await self._wait_reply(
+                    bot_reply = await self._wait_reply(
                         queue,
                         forwarded.id,
                         BOT_REPLY_TIMEOUT
@@ -152,16 +152,16 @@ class Broadcaster:
                     if self.cancel_event.is_set():
                         break
 
-                    # Send /broadcast as a reply to the bot response.
+                    # Reply to the destination bot's response with
+                    # the actual /broadcast command.
                     await self._retry_floodwait(
                         lambda: client.send_message(
                             chat_id=bot_id,
                             text="/broadcast",
-                            reply_to_message_id=reply.id
+                            reply_to_message_id=bot_reply.id
                         )
                     )
 
-                    # We confirm command delivery, NOT publication.
                     sent.append(label)
 
                     await status_callback(
