@@ -659,11 +659,8 @@ async def main():
     controller_bot_id = me.id
 
     print(f"BOT CONNECTED: @{me.username}")
-    print("BOT CLIENT STARTED:", bot.is_connected)
-print("BOT IDENTITY:", me.id)
-print("WEBHOOK CHECK: Controller started")
-    print(f"BOT ID: {me.id}")
-    print(f"ADMIN ID: {ADMIN_ID}")
+print(f"BOT ID: {me.id}")
+print(f"ADMIN ID: {ADMIN_ID}")
 
     try:
         await bot.send_message(
