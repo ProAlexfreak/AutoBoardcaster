@@ -48,6 +48,30 @@ capture_client = None
 controller_bot_id = None
 
 
+# ==========================================
+# RENDER HTTP HEALTH CHECK
+# ==========================================
+
+async def health_check(reader, writer):
+    response = (
+        "HTTP/1.1 200 OK\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: 8\r\n"
+        "Connection: close\r\n"
+        "\r\n"
+        "ABBot OK"
+    )
+
+    writer.write(response.encode())
+    await writer.drain()
+    writer.close()
+    await writer.wait_closed()
+
+
+# ==========================================
+# BASIC FUNCTIONS
+# ==========================================
+
 def is_admin(message):
     return bool(
         message.from_user
@@ -94,6 +118,10 @@ def register_user_handler(client):
     capture_client = client
 
 
+# ==========================================
+# DEBUG UPDATES
+# ==========================================
+
 @bot.on_message(filters.private, group=-1)
 async def debug_updates(_, message):
     sender_id = (
@@ -111,6 +139,10 @@ async def debug_updates(_, message):
         f"Sender: {sender_id} | Command: {command}"
     )
 
+
+# ==========================================
+# START COMMAND
+# ==========================================
 
 @bot.on_message(
     filters.private & filters.command("start")
@@ -131,6 +163,10 @@ async def start(_, message):
         "**Control:** `/Cancel`"
     )
 
+
+# ==========================================
+# LOGIN COMMANDS
+# ==========================================
 
 @bot.on_message(
     filters.private & filters.command("login")
@@ -213,6 +249,10 @@ async def logout(_, message):
     )
 
 
+# ==========================================
+# DESTINATION BOT MANAGEMENT
+# ==========================================
+
 @bot.on_message(
     filters.private & filters.command("addbots")
 )
@@ -265,6 +305,10 @@ async def listbots(_, message):
 
     await reply(message, "\n".join(lines))
 
+
+# ==========================================
+# BROADCAST COMMAND
+# ==========================================
 
 @bot.on_message(
     filters.private & filters.command("sendall")
@@ -327,6 +371,10 @@ async def sendall(_, message):
         )
 
 
+# ==========================================
+# CANCEL COMMAND
+# ==========================================
+
 @bot.on_message(
     filters.private & filters.command("cancel")
 )
@@ -356,6 +404,10 @@ async def cancel(_, message):
     )
 
 
+# ==========================================
+# COMMAND LIST
+# ==========================================
+
 COMMANDS = [
     "start",
     "login",
@@ -369,6 +421,10 @@ COMMANDS = [
     "cancel"
 ]
 
+
+# ==========================================
+# INPUT HANDLER
+# ==========================================
 
 @bot.on_message(
     filters.private
@@ -586,6 +642,10 @@ async def handle_input(_, message):
         )
 
 
+# ==========================================
+# MAIN STARTUP
+# ==========================================
+
 async def main():
     global controller_bot_id
 
@@ -625,6 +685,16 @@ async def main():
     else:
         print("NO SAVED USER SESSION.")
 
+    # Start HTTP health server for Render Web Service
+    port = int(os.environ.get("PORT", 10000))
+
+    server = await asyncio.start_server(
+        health_check,
+        "0.0.0.0",
+        port
+    )
+
+    print(f"HTTP health server running on port {port}")
     print("ABBot is running and waiting for updates.")
 
     await asyncio.Event().wait()
