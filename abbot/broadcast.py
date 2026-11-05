@@ -27,11 +27,11 @@ class Broadcaster:
             # Detect the post copied by ABBot into the user account's
             # private chat with ABBot.
             if (
-                message.chat.id == controller_bot_id
-                and message.from_user
-                and message.from_user.id == controller_bot_id
-                and self.on_source is not None
-            ):
+    message.chat.id == ADMIN_ID
+    and message.from_user
+    and message.from_user.id == controller_bot_id
+    and self.on_source is not None
+):
                 self.on_source = None
 
                 asyncio.create_task(
