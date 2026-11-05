@@ -654,6 +654,11 @@ async def main():
 
     print("STEP 2: Starting controller bot...")
     await bot.start()
+me = await bot.get_me()
+
+print("BOT CLIENT STARTED:", bot.is_connected)
+print("BOT IDENTITY:", me.id)
+print("WEBHOOK CHECK: Controller started")
 
     me = await bot.get_me()
     controller_bot_id = me.id
